@@ -271,3 +271,40 @@ function seedIfEmpty() {
   toggleLike(p2.id, alice.id);
   toggleLike(p3.id, bob.id);
 }
+
+// テスト用ユーザーを追加し、ログイン中ユーザーにフォローさせてタイムラインに表示する
+function ensureDemoTestUsers() {
+  const testUserSpecs = [
+    { username: "test1", displayName: "Test User 1", bio: "テスト用アカウント1です。" },
+    { username: "test2", displayName: "Test User 2", bio: "テスト用アカウント2です。" },
+    { username: "test3", displayName: "Test User 3", bio: "テスト用アカウント3です。" },
+    { username: "test4", displayName: "Test User 4", bio: "テスト用アカウント4です。" },
+  ];
+
+  testUserSpecs.forEach((spec, i) => {
+    let user = findUserByUsername(spec.username);
+    if (!user) {
+      user = createUser({
+        username: spec.username,
+        email: `${spec.username}@example.com`,
+        password: "password",
+        displayName: spec.displayName,
+        bio: spec.bio,
+      });
+      createPost({
+        userId: user.id,
+        content: `${spec.displayName}からのテスト投稿です。よろしくお願いします！(#${i + 1})`,
+        images: [],
+      });
+    }
+  });
+
+  const me = getCurrentUser();
+  if (!me) return;
+  testUserSpecs.forEach((spec) => {
+    const user = findUserByUsername(spec.username);
+    if (user && user.id !== me.id && !isFollowing(me.id, user.id)) {
+      toggleFollow(me.id, user.id);
+    }
+  });
+}

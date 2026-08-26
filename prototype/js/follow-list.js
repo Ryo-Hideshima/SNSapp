@@ -30,7 +30,12 @@ function render() {
   }
 
   listEl.innerHTML = users.map(userRowHTML).join("");
-  bindUserRowEvents(listEl);
+  listEl.querySelectorAll(".js-follow-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      toggleFollow(getCurrentUser().id, Number(btn.dataset.userId));
+      render(); // フォロー中/フォロワーの人数・一覧を最新の状態で再描画する
+    });
+  });
 }
 
 render();
