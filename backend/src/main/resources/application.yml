@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/snsapp}
+    username: ${DB_USERNAME:snsapp}
+    password: ${DB_PASSWORD:snsapp}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.snsapp.backend.domain
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-key-please-change-in-production-min-32-bytes}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
