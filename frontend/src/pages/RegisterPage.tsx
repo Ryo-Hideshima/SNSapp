@@ -25,7 +25,7 @@ export function RegisterPage() {
         password,
         displayName: displayName.trim() === "" ? undefined : displayName,
       });
-      navigate("/home");
+      navigate("/timeline");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "登録に失敗しました。");
     } finally {
