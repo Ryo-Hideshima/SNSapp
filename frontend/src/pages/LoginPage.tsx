@@ -18,7 +18,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login({ email, password });
-      navigate("/home");
+      navigate("/timeline");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "ログインに失敗しました。");
     } finally {

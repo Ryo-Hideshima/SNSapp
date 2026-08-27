@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snsapp.backend.mapper.PostMapper">
+
+    <resultMap id="postResponseResultMap" type="com.snsapp.backend.dto.PostResponse">
+        <id property="id" column="id"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="authorId" column="author_id"/>
+        <result property="authorUsername" column="author_username"/>
+        <result property="authorDisplayName" column="author_display_name"/>
+    </resultMap>
+
+    <sql id="selectPostWithAuthor">
+        SELECT
+            p.id, p.content, p.created_at, p.updated_at,
+            u.id AS author_id, u.username AS author_username, u.display_name AS author_display_name
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+    </sql>
+
+    <select id="findAll" resultMap="postResponseResultMap">
+        <include refid="selectPostWithAuthor"/>
+        ORDER BY p.created_at DESC, p.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findNewerThan" resultMap="postResponseResultMap">
+        <include refid="selectPostWithAuthor"/>
+        WHERE p.id > #{sinceId}
+        ORDER BY p.created_at DESC, p.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findById" resultMap="postResponseResultMap">
+        <include refid="selectPostWithAuthor"/>
+        WHERE p.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.snsapp.backend.domain.Post" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO posts (user_id, content, created_at, updated_at)
+        VALUES (#{userId}, #{content}, now(), now())
+    </insert>
+
+    <update id="updateContent">
+        UPDATE posts
+        SET content = #{content}, updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM posts
+        WHERE id = #{id}
+    </delete>
+
+</mapper>

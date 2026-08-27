@@ -1,9 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
-import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
+import { PostFormPage } from "./pages/PostFormPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { TimelinePage } from "./pages/TimelinePage";
 
 function App() {
   return (
@@ -12,15 +13,31 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
-          path="/home"
+          path="/timeline"
           element={
             <ProtectedRoute>
-              <HomePage />
+              <TimelinePage />
             </ProtectedRoute>
           }
         />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route
+          path="/posts/new"
+          element={
+            <ProtectedRoute>
+              <PostFormPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/posts/:id/edit"
+          element={
+            <ProtectedRoute>
+              <PostFormPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/timeline" replace />} />
+        <Route path="*" element={<Navigate to="/timeline" replace />} />
       </Routes>
     </AuthProvider>
   );

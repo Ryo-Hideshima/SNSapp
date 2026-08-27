@@ -46,10 +46,11 @@ export function rawRequest(path: string, init: RequestInit = {}, accessToken?: s
   });
 }
 
-/** 認証不要のJSON API呼び出し。エラー時はバックエンドのmessageを使ってApiErrorを投げる。 */
-export async function requestJson<TResponse>(path: string, init: RequestInit = {}): Promise<TResponse> {
-  const response = await rawRequest(path, init);
-
+/**
+ * fetchのResponseをJSONとして解決する。エラー時はバックエンドのmessageを使ってApiErrorを投げる。
+ * 認証不要のrequestJsonと、認証必須のauthFetch(client.ts)経由のレスポンスの両方から使う共通処理。
+ */
+export async function parseJsonResponse<TResponse>(response: Response): Promise<TResponse> {
   if (!response.ok) {
     throw new ApiError(response.status, await parseErrorMessage(response));
   }
@@ -57,4 +58,10 @@ export async function requestJson<TResponse>(path: string, init: RequestInit = {
     return undefined as TResponse;
   }
   return (await response.json()) as TResponse;
+}
+
+/** 認証不要のJSON API呼び出し。 */
+export async function requestJson<TResponse>(path: string, init: RequestInit = {}): Promise<TResponse> {
+  const response = await rawRequest(path, init);
+  return parseJsonResponse<TResponse>(response);
 }
