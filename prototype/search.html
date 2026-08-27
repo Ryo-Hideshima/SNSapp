@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ユーザー検索 | SNS Mock</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="header-root"></div>
+
+  <main class="page page--narrow">
+    <h1 class="section-title" style="margin-top:0">ユーザー検索</h1>
+    <div class="card">
+      <form id="search-form" novalidate>
+        <div class="form-field">
+          <label for="keyword">ユーザー名または表示名で検索</label>
+          <input type="text" id="keyword" name="keyword" placeholder="例: alice">
+        </div>
+        <button type="submit" class="btn">検索する</button>
+      </form>
+    </div>
+    <div id="search-result"></div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/user-row.js"></script>
+  <script src="js/search.js"></script>
+</body>
+</html>

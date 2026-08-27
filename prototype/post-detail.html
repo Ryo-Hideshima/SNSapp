@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投稿詳細 | SNS Mock</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="header-root"></div>
+
+  <main class="page">
+    <div id="post-detail-root"></div>
+
+    <h2 class="section-title">コメント</h2>
+    <div class="card">
+      <form id="comment-form" novalidate>
+        <div class="form-field">
+          <label for="comment-content">コメントする</label>
+          <textarea id="comment-content" name="content" rows="3" maxlength="140" required placeholder="コメントを入力"></textarea>
+        </div>
+        <p class="form-error" id="comment-error"></p>
+        <button type="submit" class="btn">コメントする</button>
+      </form>
+    </div>
+    <div id="comment-list"></div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/post-card.js"></script>
+  <script src="js/post-detail.js"></script>
+</body>
+</html>
