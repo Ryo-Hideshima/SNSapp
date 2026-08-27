@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snsapp.backend.mapper.RefreshTokenMapper">
+
+    <resultMap id="refreshTokenResultMap" type="com.snsapp.backend.domain.RefreshToken">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="tokenHash" column="token_hash"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="revokedAt" column="revoked_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findByTokenHash" resultMap="refreshTokenResultMap">
+        SELECT id, user_id, token_hash, expires_at, revoked_at, created_at
+        FROM refresh_tokens
+        WHERE token_hash = #{tokenHash}
+    </select>
+
+    <insert id="insert" parameterType="com.snsapp.backend.domain.RefreshToken" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO refresh_tokens (user_id, token_hash, expires_at, created_at)
+        VALUES (#{userId}, #{tokenHash}, #{expiresAt}, now())
+    </insert>
+
+    <update id="revokeByTokenHash">
+        UPDATE refresh_tokens
+        SET revoked_at = #{revokedAt}
+        WHERE token_hash = #{tokenHash}
+    </update>
+
+</mapper>

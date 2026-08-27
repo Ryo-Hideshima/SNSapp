@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -48,12 +46,13 @@ class AuthControllerIT {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(registerBody)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
                 .andReturn().getResponse().getContentAsString();
 
-        String token = objectMapper.readTree(registerResponse).get("token").asText();
+        String accessToken = objectMapper.readTree(registerResponse).get("accessToken").asText();
 
-        mockMvc.perform(get("/api/hello").header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/hello").header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Hello, Alice"));
 
@@ -65,7 +64,8 @@ class AuthControllerIT {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(loginBody)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isNotEmpty());
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty());
     }
 
     @Test
@@ -120,6 +120,75 @@ class AuthControllerIT {
     @Test
     void hello_withoutToken_returns401() throws Exception {
         mockMvc.perform(get("/api/hello"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refresh_withValidToken_issuesNewTokenPair() throws Exception {
+        Map<String, String> registerBody = Map.of(
+                "username", "dave",
+                "email", "dave@example.com",
+                "password", "password123",
+                "displayName", "Dave"
+        );
+        String registerResponse = mockMvc.perform(post("/api/auth/register")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(registerBody)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String refreshToken = objectMapper.readTree(registerResponse).get("refreshToken").asText();
+
+        String refreshResponse = mockMvc.perform(post("/api/auth/refresh")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andReturn().getResponse().getContentAsString();
+        String newAccessToken = objectMapper.readTree(refreshResponse).get("accessToken").asText();
+
+        mockMvc.perform(get("/api/hello").header("Authorization", "Bearer " + newAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Hello, Dave"));
+
+        // ローテーション: 使用済みの古いリフレッシュトークンは再利用できない
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void logout_thenRefresh_returns401() throws Exception {
+        Map<String, String> registerBody = Map.of(
+                "username", "erin",
+                "email", "erin@example.com",
+                "password", "password123",
+                "displayName", "Erin"
+        );
+        String registerResponse = mockMvc.perform(post("/api/auth/register")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(registerBody)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String refreshToken = objectMapper.readTree(registerResponse).get("refreshToken").asText();
+
+        mockMvc.perform(post("/api/auth/logout")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refresh_withInvalidToken_returns401() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("refreshToken", "not-a-real-token"))))
                 .andExpect(status().isUnauthorized());
     }
 }

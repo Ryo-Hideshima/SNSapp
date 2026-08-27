@@ -2,6 +2,7 @@ package com.snsapp.backend.controller;
 
 import com.snsapp.backend.dto.AuthResponse;
 import com.snsapp.backend.dto.LoginRequest;
+import com.snsapp.backend.dto.RefreshRequest;
 import com.snsapp.backend.dto.RegisterRequest;
 import com.snsapp.backend.service.AuthService;
 import jakarta.validation.Valid;
@@ -30,5 +31,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        return ResponseEntity.ok(authService.refresh(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequest request) {
+        authService.logout(request);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,6 +1,6 @@
 # backend
 
-ユーザー登録・ログインの認証認可を実装したSpring Bootアプリケーション。
+ユーザー登録・ログインの認証認可を実装したSpring Bootアプリケーション。アクセストークン（短命JWT）とリフレッシュトークン（長命・DB保存・失効可能）を組み合わせた方式。
 
 ## 技術スタック
 
@@ -31,28 +31,41 @@
    | `DB_USERNAME` | DBユーザー名 | `snsapp` |
    | `DB_PASSWORD` | DBパスワード | `snsapp` |
    | `JWT_SECRET` | JWT署名用シークレット（本番では必ず変更する） | 開発用の固定値 |
-   | `JWT_EXPIRATION_MINUTES` | JWTの有効期限（分） | `60` |
+   | `JWT_ACCESS_EXPIRATION_MINUTES` | アクセストークンの有効期限（分） | `15` |
+   | `JWT_REFRESH_EXPIRATION_DAYS` | リフレッシュトークンの有効期限（日） | `14` |
+   | `CORS_ALLOWED_ORIGINS` | CORSで許可するオリジン（カンマ区切り） | `http://localhost:5173` |
 
 ## API
 
 | メソッド | パス | 認証 | 概要 |
 |---------|------|------|------|
-| POST | `/api/auth/register` | 不要 | ユーザー登録し、JWTを発行する |
-| POST | `/api/auth/login` | 不要 | メールアドレス／パスワードでログインし、JWTを発行する |
-| GET | `/api/hello` | 必須（`Authorization: Bearer <token>`） | ログイン後の画面が未実装のため、認証確認用に用意した仮のエンドポイント |
+| POST | `/api/auth/register` | 不要 | ユーザー登録し、アクセストークン・リフレッシュトークンを発行する |
+| POST | `/api/auth/login` | 不要 | メールアドレス／パスワードでログインし、アクセストークン・リフレッシュトークンを発行する |
+| POST | `/api/auth/refresh` | 不要（リフレッシュトークン必須） | リフレッシュトークンで新しいアクセストークン・リフレッシュトークンを発行する（ローテーション。使用済みの古いリフレッシュトークンは失効する） |
+| POST | `/api/auth/logout` | 不要（リフレッシュトークン必須） | 指定したリフレッシュトークンをサーバー側で失効させる |
+| GET | `/api/hello` | 必須（`Authorization: Bearer <アクセストークン>`） | ログイン後の画面が未実装のため、認証確認用に用意した仮のエンドポイント |
 
 ### 動作確認例（curl）
 
 ```
-curl -X POST localhost:8080/api/auth/register \
+REG=$(curl -s -X POST localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username":"alice","email":"alice@example.com","password":"password123","displayName":"Alice"}'
+  -d '{"username":"alice","email":"alice@example.com","password":"password123","displayName":"Alice"}')
 
-TOKEN=$(curl -s -X POST localhost:8080/api/auth/login \
+ACCESS_TOKEN=$(echo "$REG" | python3 -c "import sys,json;print(json.load(sys.stdin)['accessToken'])")
+REFRESH_TOKEN=$(echo "$REG" | python3 -c "import sys,json;print(json.load(sys.stdin)['refreshToken'])")
+
+curl localhost:8080/api/hello -H "Authorization: Bearer $ACCESS_TOKEN"
+
+# アクセストークンの更新（リフレッシュトークンはローテーションされる）
+curl -X POST localhost:8080/api/auth/refresh \
   -H "Content-Type: application/json" \
-  -d '{"email":"alice@example.com","password":"password123"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])")
+  -d "{\"refreshToken\":\"$REFRESH_TOKEN\"}"
 
-curl localhost:8080/api/hello -H "Authorization: Bearer $TOKEN"
+# ログアウト（リフレッシュトークンを失効）
+curl -X POST localhost:8080/api/auth/logout \
+  -H "Content-Type: application/json" \
+  -d "{\"refreshToken\":\"$REFRESH_TOKEN\"}"
 ```
 
 ## テスト
@@ -61,5 +74,5 @@ curl localhost:8080/api/hello -H "Authorization: Bearer $TOKEN"
 mvn test
 ```
 
-- `AuthServiceTest`: 登録・ログインのビジネスロジックの単体テスト（Mockito）
-- `AuthControllerIT`: Testcontainers上のPostgreSQLを使った結合テスト（登録→ログイン→認証必須エンドポイントへのアクセスまで）。Dockerが起動している必要がある
+- `AuthServiceTest`: 登録・ログイン・リフレッシュ・ログアウトのビジネスロジックの単体テスト（Mockito）
+- `AuthControllerIT`: Testcontainers上のPostgreSQLを使った結合テスト（登録→ログイン→認証必須エンドポイントへのアクセス、リフレッシュのローテーション、ログアウト後のリフレッシュ失敗まで）。Dockerが起動している必要がある

@@ -1,7 +1,8 @@
 package com.snsapp.backend.dto;
 
 public record AuthResponse(
-        String token,
+        String accessToken,
+        String refreshToken,
         Long userId,
         String username,
         String displayName
