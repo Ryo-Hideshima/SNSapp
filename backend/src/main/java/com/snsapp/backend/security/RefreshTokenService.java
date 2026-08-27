@@ -13,6 +13,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.HexFormat;
 
 @Service
 public class RefreshTokenService {
@@ -49,17 +50,17 @@ public class RefreshTokenService {
     /**
      * リフレッシュトークンを検証し、有効なら失効させたうえで所有者のuserIdを返す(ローテーション)。
      * 無効・期限切れ・失効済みの場合は例外を投げる。
+     *
+     * 検証と失効は1回のUPDATE(条件付き・RETURNING)で原子的に行う。SELECTしてから別途UPDATEする
+     * 2ステップだと、同じトークンでの同時リクエストが両方とも検証を通過してしまう競合状態が生じるため。
      */
     public Long validateAndRevoke(String rawToken) {
         String tokenHash = hash(rawToken);
-        RefreshToken refreshToken = refreshTokenMapper.findByTokenHash(tokenHash)
-                .orElseThrow(() -> new InvalidRefreshTokenException("リフレッシュトークンが無効です。再度ログインしてください。"));
+        LocalDateTime now = LocalDateTime.now();
 
-        if (!refreshToken.isUsable(LocalDateTime.now())) {
-            throw new InvalidRefreshTokenException("リフレッシュトークンが無効です。再度ログインしてください。");
-        }
+        RefreshToken refreshToken = refreshTokenMapper.revokeIfUsable(tokenHash, now, now)
+                .orElseThrow(InvalidRefreshTokenException::new);
 
-        refreshTokenMapper.revokeByTokenHash(tokenHash, LocalDateTime.now());
         return refreshToken.getUserId();
     }
 
@@ -77,11 +78,7 @@ public class RefreshTokenService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hashBytes = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hashBytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
+            return HexFormat.of().formatHex(hashBytes);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 is not available", e);
         }

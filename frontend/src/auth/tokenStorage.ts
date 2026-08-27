@@ -19,7 +19,15 @@ export function getRefreshToken(): string | null {
 
 export function getStoredUser(): StoredUser | null {
   const raw = localStorage.getItem(USER_KEY);
-  return raw ? (JSON.parse(raw) as StoredUser) : null;
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as StoredUser;
+  } catch {
+    // 壊れた値が入っていた場合はログアウト状態として扱い、以後読み直さないよう掃除する
+    localStorage.removeItem(USER_KEY);
+    return null;
+  }
 }
 
 export function saveSession(params: {

@@ -58,8 +58,4 @@ public class RefreshToken {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
-    public boolean isUsable(LocalDateTime now) {
-        return revokedAt == null && expiresAt.isAfter(now);
-    }
 }

@@ -71,7 +71,7 @@ public class AuthService {
     public AuthResponse refresh(RefreshRequest request) {
         Long userId = refreshTokenService.validateAndRevoke(request.refreshToken());
         User user = userMapper.findById(userId)
-                .orElseThrow(() -> new InvalidRefreshTokenException("リフレッシュトークンが無効です。再度ログインしてください。"));
+                .orElseThrow(InvalidRefreshTokenException::new);
 
         return issueTokens(user);
     }

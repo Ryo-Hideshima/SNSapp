@@ -11,12 +11,6 @@
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <select id="findByTokenHash" resultMap="refreshTokenResultMap">
-        SELECT id, user_id, token_hash, expires_at, revoked_at, created_at
-        FROM refresh_tokens
-        WHERE token_hash = #{tokenHash}
-    </select>
-
     <insert id="insert" parameterType="com.snsapp.backend.domain.RefreshToken" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO refresh_tokens (user_id, token_hash, expires_at, created_at)
         VALUES (#{userId}, #{tokenHash}, #{expiresAt}, now())
@@ -27,5 +21,20 @@
         SET revoked_at = #{revokedAt}
         WHERE token_hash = #{tokenHash}
     </update>
+
+    <!--
+        「まだ使えるトークンか確認してから失効させる」を1回のUPDATEで原子的に行う。
+        SELECTしてからUPDATEする2ステップにすると、同じリフレッシュトークンでの同時リクエストが
+        両方とも検証を通過してしまう競合状態が発生するため、WHERE句に有効性の条件を含めた
+        UPDATE ... RETURNING で一度に判定と失効を行う(条件に合致し実際に更新できた行だけが返る)。
+    -->
+    <select id="revokeIfUsable" resultMap="refreshTokenResultMap">
+        UPDATE refresh_tokens
+        SET revoked_at = #{revokedAt}
+        WHERE token_hash = #{tokenHash}
+          AND revoked_at IS NULL
+          AND expires_at > #{now}
+        RETURNING id, user_id, token_hash, expires_at, revoked_at, created_at
+    </select>
 
 </mapper>

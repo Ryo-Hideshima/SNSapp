@@ -1,7 +1,6 @@
 import { refresh } from "./auth";
+import { rawRequest } from "./httpClient";
 import { clearSession, getAccessToken, getRefreshToken, updateTokens } from "../auth/tokenStorage";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
 /** リフレッシュ失敗などでセッションが切れたときに呼ばれる(AuthProviderが登録する) */
 let onSessionExpired: (() => void) | null = null;
@@ -38,14 +37,7 @@ async function tryRefreshOnce(): Promise<boolean> {
  * 401が返ってきた場合はリフレッシュトークンで一度だけアクセストークンの更新を試み、再試行する。
  */
 export async function authFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const accessToken = getAccessToken();
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      ...(init.headers ?? {}),
-      Authorization: `Bearer ${accessToken ?? ""}`,
-    },
-  });
+  const response = await rawRequest(path, init, getAccessToken());
 
   if (response.status !== 401) {
     return response;
@@ -58,12 +50,5 @@ export async function authFetch(path: string, init: RequestInit = {}): Promise<R
     return response;
   }
 
-  const newAccessToken = getAccessToken();
-  return fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      ...(init.headers ?? {}),
-      Authorization: `Bearer ${newAccessToken ?? ""}`,
-    },
-  });
+  return rawRequest(path, init, getAccessToken());
 }
