@@ -11,6 +11,14 @@ export interface Post {
   authorId: number;
   authorUsername: string;
   authorDisplayName: string;
+  likeCount: number;
+  commentCount: number;
+  likedByCurrentUser: boolean;
+}
+
+export interface LikeResponse {
+  liked: boolean;
+  likeCount: number;
 }
 
 export interface PostListResponse {
@@ -61,4 +69,8 @@ export function updatePost(id: number, content: string): Promise<Post> {
 
 export function deletePost(id: number): Promise<void> {
   return authRequestJson<void>(`/api/posts/${id}`, { method: "DELETE" });
+}
+
+export function toggleLike(postId: number): Promise<LikeResponse> {
+  return authRequestJson<LikeResponse>(`/api/posts/${postId}/likes`, { method: "POST" });
 }

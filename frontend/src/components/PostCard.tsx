@@ -16,9 +16,10 @@ function formatDateTime(iso: string): string {
 interface PostCardProps {
   post: Post;
   onDelete: (id: number) => void;
+  onToggleLike: (id: number) => void;
 }
 
-export function PostCard({ post, onDelete }: PostCardProps) {
+export function PostCard({ post, onDelete, onToggleLike }: PostCardProps) {
   const { user } = useAuth();
   const isOwner = user?.userId === post.authorId;
 
@@ -35,7 +36,21 @@ export function PostCard({ post, onDelete }: PostCardProps) {
         <span className="post-card__author-username">@{post.authorUsername}</span>
         <span className="post-card__time">・{formatDateTime(post.createdAt)}</span>
       </div>
-      <p className="post-card__content">{post.content}</p>
+      <Link to={`/posts/${post.id}`} className="post-card__content-link">
+        <p className="post-card__content">{post.content}</p>
+      </Link>
+      <div className="post-card__stats">
+        <button
+          type="button"
+          className={`post-card__like-btn${post.likedByCurrentUser ? " post-card__like-btn--liked" : ""}`}
+          onClick={() => onToggleLike(post.id)}
+        >
+          {post.likedByCurrentUser ? "❤" : "♡"} {post.likeCount}
+        </button>
+        <Link to={`/posts/${post.id}`} className="post-card__comment-count">
+          💬 {post.commentCount}
+        </Link>
+      </div>
       {isOwner && (
         <div className="post-card__actions">
           <Link to={`/posts/${post.id}/edit`} className="post-card__action">

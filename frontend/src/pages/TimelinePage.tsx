@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, deletePost, listNewPosts, listPosts, type Post } from "../api/posts";
+import { ApiError, deletePost, listNewPosts, listPosts, toggleLike, type Post } from "../api/posts";
 import { AppHeader } from "../components/AppHeader";
 import { PostCard } from "../components/PostCard";
 
@@ -157,6 +157,19 @@ export function TimelinePage() {
     }
   };
 
+  const handleToggleLike = async (id: number) => {
+    try {
+      const result = await toggleLike(id);
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === id ? { ...post, likedByCurrentUser: result.liked, likeCount: result.likeCount } : post
+        )
+      );
+    } catch (err) {
+      window.alert(err instanceof ApiError ? err.message : "いいねに失敗しました。");
+    }
+  };
+
   return (
     <>
       <AppHeader onRefresh={handleManualRefresh} refreshing={refreshing} />
@@ -183,7 +196,9 @@ export function TimelinePage() {
 
         {!loading &&
           !error &&
-          posts.map((post) => <PostCard key={post.id} post={post} onDelete={handleDelete} />)}
+          posts.map((post) => (
+            <PostCard key={post.id} post={post} onDelete={handleDelete} onToggleLike={handleToggleLike} />
+          ))}
 
         {!loading && !error && posts.length > 0 && (
           <div ref={sentinelCallbackRef} className="timeline-sentinel">

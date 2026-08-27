@@ -158,6 +158,41 @@ class PostControllerIT {
     }
 
     @Test
+    void list_includesLikeAndCommentCountsAndLikedByCurrentUser() throws Exception {
+        String ownerToken = registerAndGetAccessToken("henry");
+        String otherToken = registerAndGetAccessToken("iris");
+
+        String createResponse = mockMvc.perform(post("/api/posts")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("content", "counts test"))))
+                .andReturn().getResponse().getContentAsString();
+        long postId = objectMapper.readTree(createResponse).get("id").asLong();
+
+        // 別ユーザーがいいね・コメントする
+        mockMvc.perform(post("/api/posts/" + postId + "/likes").header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/posts/" + postId + "/comments")
+                        .header("Authorization", "Bearer " + otherToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("content", "nice post"))))
+                .andExpect(status().isCreated());
+
+        // 投稿者本人からは「自分はいいねしていない」ことが見える
+        mockMvc.perform(get("/api/posts/" + postId).header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.likeCount").value(1))
+                .andExpect(jsonPath("$.commentCount").value(1))
+                .andExpect(jsonPath("$.likedByCurrentUser").value(false));
+
+        // いいねした本人からは「自分はいいねした」ことが見える
+        mockMvc.perform(get("/api/posts/" + postId).header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.likeCount").value(1))
+                .andExpect(jsonPath("$.likedByCurrentUser").value(true));
+    }
+
+    @Test
     void endpoints_withoutToken_return401() throws Exception {
         mockMvc.perform(get("/api/posts")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/posts")

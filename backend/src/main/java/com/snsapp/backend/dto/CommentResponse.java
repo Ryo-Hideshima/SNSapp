@@ -3,20 +3,16 @@ package com.snsapp.backend.dto;
 import java.time.LocalDateTime;
 
 /**
- * 投稿の一覧・詳細レスポンス。MyBatisのマッピング先も兼ねる(posts JOIN usersの結果をそのまま受け取る)。
+ * コメントの一覧レスポンス。MyBatisのマッピング先も兼ねる(comments JOIN usersの結果をそのまま受け取る)。
  */
-public class PostResponse {
+public class CommentResponse {
 
     private Long id;
     private String content;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private Long authorId;
     private String authorUsername;
     private String authorDisplayName;
-    private long likeCount;
-    private long commentCount;
-    private boolean likedByCurrentUser;
 
     public Long getId() {
         return id;
@@ -42,14 +38,6 @@ public class PostResponse {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     public Long getAuthorId() {
         return authorId;
     }
@@ -72,29 +60,5 @@ public class PostResponse {
 
     public void setAuthorDisplayName(String authorDisplayName) {
         this.authorDisplayName = authorDisplayName;
-    }
-
-    public long getLikeCount() {
-        return likeCount;
-    }
-
-    public void setLikeCount(long likeCount) {
-        this.likeCount = likeCount;
-    }
-
-    public long getCommentCount() {
-        return commentCount;
-    }
-
-    public void setCommentCount(long commentCount) {
-        this.commentCount = commentCount;
-    }
-
-    public boolean isLikedByCurrentUser() {
-        return likedByCurrentUser;
-    }
-
-    public void setLikedByCurrentUser(boolean likedByCurrentUser) {
-        this.likedByCurrentUser = likedByCurrentUser;
     }
 }

@@ -33,6 +33,11 @@ public class ApiExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleCommentNotFound(CommentNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
     @ExceptionHandler(ForbiddenOperationException.class)
     public ResponseEntity<Map<String, Object>> handleForbiddenOperation(ForbiddenOperationException e) {
         return buildResponse(HttpStatus.FORBIDDEN, e.getMessage());
