@@ -176,22 +176,39 @@ body {
   color: #f4212e;
 }
 
+/*
+ * 新着通知バナー: スクロール位置に関わらず常に見えるよう画面上部に固定表示する
+ * (position: fixedのフローティングピル)。クリックで先頭に新着を差し込みつつ、
+ * ページ最上部まで自動スクロールして最新の投稿を見せる。
+ */
 .new-posts-banner {
+  position: fixed;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
   display: block;
-  width: 100%;
+  width: max-content;
   border: none;
   border-radius: 999px;
   background: #1d9bf0;
   color: #fff;
   font-weight: 700;
   font-size: 0.9rem;
-  padding: 10px;
-  margin-bottom: 12px;
+  padding: 10px 20px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 20, 25, 0.25);
 }
 
 .new-posts-banner:hover {
   background: #1a8cd8;
+}
+
+.timeline-sentinel {
+  color: #536471;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px 0;
 }
 
 /* post card */
