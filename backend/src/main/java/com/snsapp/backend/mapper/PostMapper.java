@@ -12,12 +12,20 @@ import java.util.Optional;
 @Mapper
 public interface PostMapper {
 
-    List<PostResponse> findAll(@Param("limit") int limit, @Param("offset") int offset);
+    List<PostResponse> findAll(
+            @Param("limit") int limit,
+            @Param("offset") int offset,
+            @Param("currentUserId") Long currentUserId
+    );
 
     /** idがsinceIdより大きい(=新しい)投稿を新着順に最大limit件返す。X/TwitterのsinceIdと同じ考え方。 */
-    List<PostResponse> findNewerThan(@Param("sinceId") long sinceId, @Param("limit") int limit);
+    List<PostResponse> findNewerThan(
+            @Param("sinceId") long sinceId,
+            @Param("limit") int limit,
+            @Param("currentUserId") Long currentUserId
+    );
 
-    Optional<PostResponse> findById(@Param("id") Long id);
+    Optional<PostResponse> findById(@Param("id") Long id, @Param("currentUserId") Long currentUserId);
 
     void insert(Post post);
 

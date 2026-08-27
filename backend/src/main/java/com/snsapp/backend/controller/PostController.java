@@ -37,18 +37,19 @@ public class PostController {
     public PostListResponse list(
             @RequestParam(required = false) Long sinceId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
         int boundedSize = boundSize(size);
         if (sinceId != null) {
-            return postService.listNewerThan(sinceId, boundedSize);
+            return postService.listNewerThan(sinceId, boundedSize, principal.getId());
         }
-        return postService.listPosts(Math.max(page, 0), boundedSize);
+        return postService.listPosts(Math.max(page, 0), boundedSize, principal.getId());
     }
 
     @GetMapping("/{id}")
-    public PostResponse get(@PathVariable Long id) {
-        return postService.getPost(id);
+    public PostResponse get(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        return postService.getPost(id, principal.getId());
     }
 
     @PostMapping

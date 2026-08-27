@@ -10,31 +10,44 @@
         <result property="authorId" column="author_id"/>
         <result property="authorUsername" column="author_username"/>
         <result property="authorDisplayName" column="author_display_name"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="likedByCurrentUser" column="liked_by_current_user"/>
     </resultMap>
 
-    <sql id="selectPostWithAuthor">
+    <!--
+        いいね数・コメント数・自分がいいね済みかを、投稿1件ごとに追加クエリを発行するのではなく
+        LEFT JOINの集計サブクエリでこの1クエリにまとめて取り込む(N+1回避)。
+    -->
+    <sql id="selectPostWithAuthorAndCounts">
         SELECT
             p.id, p.content, p.created_at, p.updated_at,
-            u.id AS author_id, u.username AS author_username, u.display_name AS author_display_name
+            u.id AS author_id, u.username AS author_username, u.display_name AS author_display_name,
+            COALESCE(lc.count, 0) AS like_count,
+            COALESCE(cc.count, 0) AS comment_count,
+            (ul.post_id IS NOT NULL) AS liked_by_current_user
         FROM posts p
         JOIN users u ON p.user_id = u.id
+        LEFT JOIN (SELECT post_id, COUNT(*) AS count FROM likes GROUP BY post_id) lc ON lc.post_id = p.id
+        LEFT JOIN (SELECT post_id, COUNT(*) AS count FROM comments GROUP BY post_id) cc ON cc.post_id = p.id
+        LEFT JOIN likes ul ON ul.post_id = p.id AND ul.user_id = #{currentUserId}
     </sql>
 
     <select id="findAll" resultMap="postResponseResultMap">
-        <include refid="selectPostWithAuthor"/>
+        <include refid="selectPostWithAuthorAndCounts"/>
         ORDER BY p.created_at DESC, p.id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="findNewerThan" resultMap="postResponseResultMap">
-        <include refid="selectPostWithAuthor"/>
+        <include refid="selectPostWithAuthorAndCounts"/>
         WHERE p.id > #{sinceId}
         ORDER BY p.created_at DESC, p.id DESC
         LIMIT #{limit}
     </select>
 
     <select id="findById" resultMap="postResponseResultMap">
-        <include refid="selectPostWithAuthor"/>
+        <include refid="selectPostWithAuthorAndCounts"/>
         WHERE p.id = #{id}
     </select>
 

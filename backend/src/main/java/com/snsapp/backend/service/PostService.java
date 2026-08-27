@@ -22,19 +22,19 @@ public class PostService {
         this.postMapper = postMapper;
     }
 
-    public PostListResponse listPosts(int page, int size) {
-        List<PostResponse> posts = postMapper.findAll(size + 1, page * size);
+    public PostListResponse listPosts(int page, int size, Long currentUserId) {
+        List<PostResponse> posts = postMapper.findAll(size + 1, page * size, currentUserId);
         return toPage(posts, page, size);
     }
 
     /** sinceIdより新しい投稿を取得する(新着チェック・手動更新用)。pageは常に0として扱う。 */
-    public PostListResponse listNewerThan(long sinceId, int size) {
-        List<PostResponse> posts = postMapper.findNewerThan(sinceId, size + 1);
+    public PostListResponse listNewerThan(long sinceId, int size, Long currentUserId) {
+        List<PostResponse> posts = postMapper.findNewerThan(sinceId, size + 1, currentUserId);
         return toPage(posts, 0, size);
     }
 
-    public PostResponse getPost(Long id) {
-        return postMapper.findById(id).orElseThrow(PostNotFoundException::new);
+    public PostResponse getPost(Long id, Long currentUserId) {
+        return postMapper.findById(id, currentUserId).orElseThrow(PostNotFoundException::new);
     }
 
     public PostResponse createPost(Long userId, CreatePostRequest request) {
@@ -42,19 +42,19 @@ public class PostService {
         post.setUserId(userId);
         post.setContent(request.content());
         postMapper.insert(post);
-        return postMapper.findById(post.getId()).orElseThrow(PostNotFoundException::new);
+        return getPost(post.getId(), userId);
     }
 
     public PostResponse updatePost(Long postId, Long currentUserId, UpdatePostRequest request) {
-        PostResponse existing = getPost(postId);
+        PostResponse existing = getPost(postId, currentUserId);
         requireOwner(existing, currentUserId);
 
         postMapper.updateContent(postId, request.content(), LocalDateTime.now());
-        return getPost(postId);
+        return getPost(postId, currentUserId);
     }
 
     public void deletePost(Long postId, Long currentUserId) {
-        PostResponse existing = getPost(postId);
+        PostResponse existing = getPost(postId, currentUserId);
         requireOwner(existing, currentUserId);
 
         postMapper.deleteById(postId);

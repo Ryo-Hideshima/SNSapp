@@ -55,9 +55,9 @@ class PostServiceTest {
     @Test
     void listPosts_whenMoreThanSizeAvailable_setsHasMoreAndTrims() {
         List<PostResponse> fetched = List.of(response(3, 1), response(2, 1), response(1, 1));
-        when(postMapper.findAll(3, 0)).thenReturn(fetched);
+        when(postMapper.findAll(3, 0, 100L)).thenReturn(fetched);
 
-        var result = postService.listPosts(0, 2);
+        var result = postService.listPosts(0, 2, 100L);
 
         assertThat(result.hasMore()).isTrue();
         assertThat(result.posts()).hasSize(2);
@@ -67,9 +67,9 @@ class PostServiceTest {
     @Test
     void listPosts_whenExactlySizeAvailable_hasMoreIsFalse() {
         List<PostResponse> fetched = List.of(response(2, 1), response(1, 1));
-        when(postMapper.findAll(3, 0)).thenReturn(fetched);
+        when(postMapper.findAll(3, 0, 100L)).thenReturn(fetched);
 
-        var result = postService.listPosts(0, 2);
+        var result = postService.listPosts(0, 2, 100L);
 
         assertThat(result.hasMore()).isFalse();
         assertThat(result.posts()).hasSize(2);
@@ -78,9 +78,9 @@ class PostServiceTest {
     @Test
     void listNewerThan_delegatesToMapperWithSinceId() {
         List<PostResponse> fetched = List.of(response(5, 1));
-        when(postMapper.findNewerThan(3, 21)).thenReturn(fetched);
+        when(postMapper.findNewerThan(3, 21, 100L)).thenReturn(fetched);
 
-        var result = postService.listNewerThan(3, 20);
+        var result = postService.listNewerThan(3, 20, 100L);
 
         assertThat(result.posts()).hasSize(1);
         assertThat(result.hasMore()).isFalse();
@@ -88,9 +88,9 @@ class PostServiceTest {
 
     @Test
     void getPost_whenNotFound_throwsPostNotFoundException() {
-        when(postMapper.findById(99L)).thenReturn(Optional.empty());
+        when(postMapper.findById(99L, 100L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> postService.getPost(99L))
+        assertThatThrownBy(() -> postService.getPost(99L, 100L))
                 .isInstanceOf(PostNotFoundException.class);
     }
 
@@ -101,7 +101,7 @@ class PostServiceTest {
             post.setId(10L);
             return null;
         }).when(postMapper).insert(any(Post.class));
-        when(postMapper.findById(10L)).thenReturn(Optional.of(response(10, 1)));
+        when(postMapper.findById(10L, 1L)).thenReturn(Optional.of(response(10, 1)));
 
         var result = postService.createPost(1L, new CreatePostRequest("hello"));
 
@@ -110,17 +110,17 @@ class PostServiceTest {
 
     @Test
     void updatePost_byOwner_updatesAndReturnsFreshPost() {
-        when(postMapper.findById(1L)).thenReturn(Optional.of(response(1, 100)));
+        when(postMapper.findById(1L, 100L)).thenReturn(Optional.of(response(1, 100)));
 
         postService.updatePost(1L, 100L, new UpdatePostRequest("updated"));
 
         verify(postMapper).updateContent(eq(1L), eq("updated"), any());
-        verify(postMapper, times(2)).findById(1L);
+        verify(postMapper, times(2)).findById(1L, 100L);
     }
 
     @Test
     void updatePost_byNonOwner_throwsForbiddenAndDoesNotUpdate() {
-        when(postMapper.findById(1L)).thenReturn(Optional.of(response(1, 100)));
+        when(postMapper.findById(1L, 999L)).thenReturn(Optional.of(response(1, 100)));
 
         assertThatThrownBy(() -> postService.updatePost(1L, 999L, new UpdatePostRequest("updated")))
                 .isInstanceOf(ForbiddenOperationException.class);
@@ -130,7 +130,7 @@ class PostServiceTest {
 
     @Test
     void deletePost_byOwner_deletes() {
-        when(postMapper.findById(1L)).thenReturn(Optional.of(response(1, 100)));
+        when(postMapper.findById(1L, 100L)).thenReturn(Optional.of(response(1, 100)));
 
         postService.deletePost(1L, 100L);
 
@@ -139,7 +139,7 @@ class PostServiceTest {
 
     @Test
     void deletePost_byNonOwner_throwsForbiddenAndDoesNotDelete() {
-        when(postMapper.findById(1L)).thenReturn(Optional.of(response(1, 100)));
+        when(postMapper.findById(1L, 999L)).thenReturn(Optional.of(response(1, 100)));
 
         assertThatThrownBy(() -> postService.deletePost(1L, 999L))
                 .isInstanceOf(ForbiddenOperationException.class);
