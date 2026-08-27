@@ -22,13 +22,13 @@ public class JwtService {
 
     public JwtService(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-minutes}") long expirationMinutes
+            @Value("${app.jwt.access-expiration-minutes}") long accessExpirationMinutes
     ) {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expiration = Duration.ofMinutes(expirationMinutes);
+        this.expiration = Duration.ofMinutes(accessExpirationMinutes);
     }
 
-    public String generateToken(Long userId, String username) {
+    public String generateAccessToken(Long userId, String username) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(String.valueOf(userId))

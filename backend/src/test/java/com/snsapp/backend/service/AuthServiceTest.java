@@ -2,11 +2,14 @@ package com.snsapp.backend.service;
 
 import com.snsapp.backend.domain.User;
 import com.snsapp.backend.dto.LoginRequest;
+import com.snsapp.backend.dto.RefreshRequest;
 import com.snsapp.backend.dto.RegisterRequest;
 import com.snsapp.backend.exception.DuplicateResourceException;
 import com.snsapp.backend.exception.InvalidCredentialsException;
+import com.snsapp.backend.exception.InvalidRefreshTokenException;
 import com.snsapp.backend.mapper.UserMapper;
 import com.snsapp.backend.security.JwtService;
+import com.snsapp.backend.security.RefreshTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,17 +39,20 @@ class AuthServiceTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userMapper, passwordEncoder, jwtService);
+        authService = new AuthService(userMapper, passwordEncoder, jwtService, refreshTokenService);
     }
 
     @Test
-    void register_savesUserWithHashedPasswordAndReturnsToken() {
+    void register_savesUserWithHashedPasswordAndReturnsTokens() {
         RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "password123", "Alice");
         when(userMapper.findByUsername("alice")).thenReturn(Optional.empty());
         when(userMapper.findByEmail("alice@example.com")).thenReturn(Optional.empty());
@@ -55,11 +61,13 @@ class AuthServiceTest {
             user.setId(1L);
             return null;
         }).when(userMapper).insert(any(User.class));
-        when(jwtService.generateToken(anyLong(), anyString())).thenReturn("dummy-token");
+        when(jwtService.generateAccessToken(anyLong(), anyString())).thenReturn("dummy-access-token");
+        when(refreshTokenService.issue(anyLong())).thenReturn("dummy-refresh-token");
 
         var response = authService.register(request);
 
-        assertThat(response.token()).isEqualTo("dummy-token");
+        assertThat(response.accessToken()).isEqualTo("dummy-access-token");
+        assertThat(response.refreshToken()).isEqualTo("dummy-refresh-token");
         assertThat(response.username()).isEqualTo("alice");
         assertThat(response.displayName()).isEqualTo("Alice");
 
@@ -98,7 +106,8 @@ class AuthServiceTest {
             user.setId(2L);
             return null;
         }).when(userMapper).insert(any(User.class));
-        when(jwtService.generateToken(anyLong(), anyString())).thenReturn("dummy-token");
+        when(jwtService.generateAccessToken(anyLong(), anyString())).thenReturn("dummy-access-token");
+        when(refreshTokenService.issue(anyLong())).thenReturn("dummy-refresh-token");
 
         var response = authService.register(request);
 
@@ -106,7 +115,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_withCorrectCredentials_returnsToken() {
+    void login_withCorrectCredentials_returnsTokens() {
         User user = new User();
         user.setId(1L);
         user.setUsername("alice");
@@ -115,11 +124,13 @@ class AuthServiceTest {
         user.setPasswordHash(passwordEncoder.encode("password123"));
 
         when(userMapper.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
-        when(jwtService.generateToken(1L, "alice")).thenReturn("dummy-token");
+        when(jwtService.generateAccessToken(1L, "alice")).thenReturn("dummy-access-token");
+        when(refreshTokenService.issue(1L)).thenReturn("dummy-refresh-token");
 
         var response = authService.login(new LoginRequest("alice@example.com", "password123"));
 
-        assertThat(response.token()).isEqualTo("dummy-token");
+        assertThat(response.accessToken()).isEqualTo("dummy-access-token");
+        assertThat(response.refreshToken()).isEqualTo("dummy-refresh-token");
         assertThat(response.userId()).isEqualTo(1L);
     }
 
@@ -139,5 +150,39 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("unknown@example.com", "password123")))
                 .isInstanceOf(InvalidCredentialsException.class);
+    }
+
+    @Test
+    void refresh_withValidToken_rotatesAndReturnsNewTokens() {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("alice");
+        user.setDisplayName("Alice");
+
+        when(refreshTokenService.validateAndRevoke("old-refresh-token")).thenReturn(1L);
+        when(userMapper.findById(1L)).thenReturn(Optional.of(user));
+        when(jwtService.generateAccessToken(1L, "alice")).thenReturn("new-access-token");
+        when(refreshTokenService.issue(1L)).thenReturn("new-refresh-token");
+
+        var response = authService.refresh(new RefreshRequest("old-refresh-token"));
+
+        assertThat(response.accessToken()).isEqualTo("new-access-token");
+        assertThat(response.refreshToken()).isEqualTo("new-refresh-token");
+    }
+
+    @Test
+    void refresh_withInvalidToken_throwsInvalidRefreshTokenException() {
+        when(refreshTokenService.validateAndRevoke("bad-token"))
+                .thenThrow(new InvalidRefreshTokenException("リフレッシュトークンが無効です。再度ログインしてください。"));
+
+        assertThatThrownBy(() -> authService.refresh(new RefreshRequest("bad-token")))
+                .isInstanceOf(InvalidRefreshTokenException.class);
+    }
+
+    @Test
+    void logout_revokesRefreshToken() {
+        authService.logout(new RefreshRequest("some-refresh-token"));
+
+        verify(refreshTokenService).revoke("some-refresh-token");
     }
 }
