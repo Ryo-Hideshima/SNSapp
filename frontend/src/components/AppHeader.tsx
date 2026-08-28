@@ -32,7 +32,11 @@ export function AppHeader({ onRefresh, refreshing = false }: AppHeaderProps) {
             {refreshing ? "更新中..." : "更新"}
           </button>
         )}
-        {user && <span className="app-header__user">@{user.username}</span>}
+        {user && (
+          <Link to={`/users/${user.username}`} className="app-header__user">
+            @{user.username}
+          </Link>
+        )}
         <button type="button" className="btn btn--ghost btn--inline" onClick={handleLogout}>
           ログアウト
         </button>

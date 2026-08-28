@@ -38,13 +38,14 @@ public class PostController {
             @RequestParam(required = false) Long sinceId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String authorUsername,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         int boundedSize = boundSize(size);
         if (sinceId != null) {
             return postService.listNewerThan(sinceId, boundedSize, principal.getId());
         }
-        return postService.listPosts(Math.max(page, 0), boundedSize, principal.getId());
+        return postService.listPosts(Math.max(page, 0), boundedSize, principal.getId(), authorUsername);
     }
 
     @GetMapping("/{id}")

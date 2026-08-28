@@ -37,4 +37,38 @@
         VALUES (#{username}, #{email}, #{passwordHash}, #{displayName}, #{bio}, #{avatarUrl}, now(), now())
     </insert>
 
+    <resultMap id="userProfileResultMap" type="com.snsapp.backend.dto.UserProfileResponse">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="displayName" column="display_name"/>
+        <result property="bio" column="bio"/>
+        <result property="avatarUrl" column="avatar_url"/>
+        <result property="followingCount" column="following_count"/>
+        <result property="followerCount" column="follower_count"/>
+        <result property="followedByCurrentUser" column="followed_by_current_user"/>
+    </resultMap>
+
+    <!--
+        フォロー中数・フォロワー数・自分がフォロー済みかを、postsのlikeCount/commentCountと同じ方針で
+        LEFT JOINの集計サブクエリでこの1クエリにまとめて取り込む(N+1回避)。
+    -->
+    <select id="findProfileByUsername" resultMap="userProfileResultMap">
+        SELECT
+            u.id, u.username, u.display_name, u.bio, u.avatar_url,
+            COALESCE(fg.count, 0) AS following_count,
+            COALESCE(fr.count, 0) AS follower_count,
+            (cf.follower_id IS NOT NULL) AS followed_by_current_user
+        FROM users u
+        LEFT JOIN (SELECT follower_id, COUNT(*) AS count FROM follows GROUP BY follower_id) fg ON fg.follower_id = u.id
+        LEFT JOIN (SELECT followee_id, COUNT(*) AS count FROM follows GROUP BY followee_id) fr ON fr.followee_id = u.id
+        LEFT JOIN follows cf ON cf.followee_id = u.id AND cf.follower_id = #{currentUserId}
+        WHERE u.username = #{username}
+    </select>
+
+    <update id="updateProfile">
+        UPDATE users
+        SET display_name = #{displayName}, bio = #{bio}, avatar_url = #{avatarUrl}, updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

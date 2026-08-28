@@ -1,9 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { FollowListPage } from "./pages/FollowListPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PostDetailPage } from "./pages/PostDetailPage";
 import { PostFormPage } from "./pages/PostFormPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { TimelinePage } from "./pages/TimelinePage";
 
@@ -42,6 +44,30 @@ function App() {
           element={
             <ProtectedRoute>
               <PostDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/:username"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/:username/following"
+          element={
+            <ProtectedRoute>
+              <FollowListPage type="following" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/:username/followers"
+          element={
+            <ProtectedRoute>
+              <FollowListPage type="followers" />
             </ProtectedRoute>
           }
         />

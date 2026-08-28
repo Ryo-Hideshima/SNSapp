@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError, deletePost, getPost, toggleLike, type Post } from "../api/posts";
 import { createComment, deleteComment, listComments, type Comment } from "../api/comments";
 import { AppHeader } from "../components/AppHeader";
@@ -113,8 +113,12 @@ export function PostDetailPage() {
           <>
             <article className="post-card">
               <div className="post-card__header">
-                <span className="post-card__author-name">{post.authorDisplayName}</span>
-                <span className="post-card__author-username">@{post.authorUsername}</span>
+                <Link to={`/users/${post.authorUsername}`} className="post-card__author-name">
+                  {post.authorDisplayName}
+                </Link>
+                <Link to={`/users/${post.authorUsername}`} className="post-card__author-username">
+                  @{post.authorUsername}
+                </Link>
                 <span className="post-card__time">・{formatDateTime(post.createdAt)}</span>
               </div>
               <p className="post-card__content">{post.content}</p>
@@ -168,8 +172,12 @@ export function PostDetailPage() {
               comments.map((comment) => (
                 <div key={comment.id} className="comment-card">
                   <div className="post-card__header">
-                    <span className="post-card__author-name">{comment.authorDisplayName}</span>
-                    <span className="post-card__author-username">@{comment.authorUsername}</span>
+                    <Link to={`/users/${comment.authorUsername}`} className="post-card__author-name">
+                      {comment.authorDisplayName}
+                    </Link>
+                    <Link to={`/users/${comment.authorUsername}`} className="post-card__author-username">
+                      @{comment.authorUsername}
+                    </Link>
                     <span className="post-card__time">・{formatDateTime(comment.createdAt)}</span>
                   </div>
                   <p className="post-card__content">{comment.content}</p>

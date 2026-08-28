@@ -55,9 +55,9 @@ class PostServiceTest {
     @Test
     void listPosts_whenMoreThanSizeAvailable_setsHasMoreAndTrims() {
         List<PostResponse> fetched = List.of(response(3, 1), response(2, 1), response(1, 1));
-        when(postMapper.findAll(3, 0, 100L)).thenReturn(fetched);
+        when(postMapper.findAll(3, 0, 100L, null)).thenReturn(fetched);
 
-        var result = postService.listPosts(0, 2, 100L);
+        var result = postService.listPosts(0, 2, 100L, null);
 
         assertThat(result.hasMore()).isTrue();
         assertThat(result.posts()).hasSize(2);
@@ -67,12 +67,22 @@ class PostServiceTest {
     @Test
     void listPosts_whenExactlySizeAvailable_hasMoreIsFalse() {
         List<PostResponse> fetched = List.of(response(2, 1), response(1, 1));
-        when(postMapper.findAll(3, 0, 100L)).thenReturn(fetched);
+        when(postMapper.findAll(3, 0, 100L, null)).thenReturn(fetched);
 
-        var result = postService.listPosts(0, 2, 100L);
+        var result = postService.listPosts(0, 2, 100L, null);
 
         assertThat(result.hasMore()).isFalse();
         assertThat(result.posts()).hasSize(2);
+    }
+
+    @Test
+    void listPosts_withAuthorUsername_passesThroughToMapper() {
+        List<PostResponse> fetched = List.of(response(1, 1));
+        when(postMapper.findAll(3, 0, 100L, "alice")).thenReturn(fetched);
+
+        var result = postService.listPosts(0, 2, 100L, "alice");
+
+        assertThat(result.posts()).hasSize(1);
     }
 
     @Test
