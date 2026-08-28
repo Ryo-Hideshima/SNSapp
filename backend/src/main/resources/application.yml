@@ -30,4 +30,4 @@ app:
 aws:
   s3:
     bucket-name: ${AWS_S3_BUCKET_NAME:snsapp-images}
-    region: ${AWS_S3_REGION:ap-northeast-1}
+    region: ${AWS_S3_REGION:us-east-1}
