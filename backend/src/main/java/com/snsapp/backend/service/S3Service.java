@@ -1,0 +1,69 @@
+package com.snsapp.backend.service;
+
+import com.snsapp.backend.exception.ImageUploadFailedException;
+import com.snsapp.backend.exception.InvalidFileTypeException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+import java.io.IOException;
+import java.util.UUID;
+
+@Service
+public class S3Service {
+
+    private final S3Client s3Client;
+    private final String bucketName;
+    private final String region;
+
+    public S3Service(
+            S3Client s3Client,
+            @Value("${aws.s3.bucket-name}") String bucketName,
+            @Value("${aws.s3.region}") String region
+    ) {
+        this.s3Client = s3Client;
+        this.bucketName = bucketName;
+        this.region = region;
+    }
+
+    /**
+     * アバター画像をS3にアップロードし、公開URLを返す。
+     * キーは avatars/{userId}/{UUID}.{拡張子} とし、ユーザーごと・アップロードごとに一意にする。
+     */
+    public String uploadAvatar(MultipartFile file, Long userId) {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new InvalidFileTypeException();
+        }
+
+        String key = "avatars/" + userId + "/" + UUID.randomUUID() + extensionFor(contentType);
+
+        try {
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .contentType(contentType)
+                            .build(),
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+            );
+        } catch (IOException | SdkException e) {
+            throw new ImageUploadFailedException(e);
+        }
+
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
+    }
+
+    private String extensionFor(String contentType) {
+        return switch (contentType) {
+            case "image/png" -> ".png";
+            case "image/gif" -> ".gif";
+            case "image/webp" -> ".webp";
+            default -> ".jpg";
+        };
+    }
+}
