@@ -4,6 +4,7 @@ import com.snsapp.backend.dto.CommentResponse;
 import com.snsapp.backend.dto.CreateCommentRequest;
 import com.snsapp.backend.security.UserPrincipal;
 import com.snsapp.backend.service.CommentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "コメント")
 @RestController
 @RequestMapping("/api/posts/{postId}/comments")
 public class CommentController {

@@ -5,6 +5,7 @@ import com.snsapp.backend.dto.LoginRequest;
 import com.snsapp.backend.dto.RefreshRequest;
 import com.snsapp.backend.dto.RegisterRequest;
 import com.snsapp.backend.service.AuthService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "認証")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
