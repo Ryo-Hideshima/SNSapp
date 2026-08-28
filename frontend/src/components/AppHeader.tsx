@@ -32,6 +32,9 @@ export function AppHeader({ onRefresh, refreshing = false }: AppHeaderProps) {
             {refreshing ? "更新中..." : "更新"}
           </button>
         )}
+        <Link to="/search" className="btn btn--ghost btn--inline">
+          検索
+        </Link>
         {user && (
           <Link to={`/users/${user.username}`} className="app-header__user">
             @{user.username}

@@ -61,3 +61,7 @@ export function listFollowing(username: string): Promise<UserSummary[]> {
 export function listFollowers(username: string): Promise<UserSummary[]> {
   return authRequestJson<UserSummary[]>(`/api/users/${username}/followers`);
 }
+
+export function searchUsers(keyword: string): Promise<UserSummary[]> {
+  return authRequestJson<UserSummary[]>(`/api/users?q=${encodeURIComponent(keyword)}`);
+}

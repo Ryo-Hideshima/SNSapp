@@ -134,4 +134,33 @@ class UserControllerIT {
                         .content(objectMapper.writeValueAsString(Map.of("displayName", "x"))))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void search_matchesUsernameOrDisplayNameCaseInsensitively_andExcludesSelf() throws Exception {
+        String searcherToken = registerAndGetAccessToken("search_alice");
+        registerAndGetAccessToken("search_bobby");
+
+        mockMvc.perform(get("/api/users").param("q", "BOB").header("Authorization", "Bearer " + searcherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].username").value("search_bobby"));
+
+        mockMvc.perform(get("/api/users").param("q", "search_alice").header("Authorization", "Bearer " + searcherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void search_withBlankKeyword_returnsEmptyList() throws Exception {
+        String token = registerAndGetAccessToken("search_carol");
+
+        mockMvc.perform(get("/api/users").param("q", "").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void search_withoutToken_returns401() throws Exception {
+        mockMvc.perform(get("/api/users").param("q", "anything")).andExpect(status().isUnauthorized());
+    }
 }

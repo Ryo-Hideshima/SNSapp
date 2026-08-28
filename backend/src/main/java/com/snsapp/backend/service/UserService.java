@@ -14,6 +14,8 @@ import java.util.List;
 @Service
 public class UserService {
 
+    private static final int SEARCH_RESULT_LIMIT = 20;
+
     private final UserMapper userMapper;
     private final FollowMapper followMapper;
 
@@ -42,6 +44,15 @@ public class UserService {
     public List<UserSummaryResponse> listFollowers(String username, Long currentUserId) {
         Long targetUserId = resolveUserId(username);
         return followMapper.findFollowers(targetUserId, currentUserId);
+    }
+
+    /** キーワード未入力の場合はDBにアクセスせず空リストを返す(検索を実行しない仕様)。 */
+    public List<UserSummaryResponse> searchUsers(String keyword, Long currentUserId) {
+        String trimmed = keyword == null ? "" : keyword.trim();
+        if (trimmed.isEmpty()) {
+            return List.of();
+        }
+        return userMapper.search(trimmed, currentUserId, SEARCH_RESULT_LIMIT);
     }
 
     private Long resolveUserId(String username) {

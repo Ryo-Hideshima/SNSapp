@@ -7,6 +7,7 @@ import { PostDetailPage } from "./pages/PostDetailPage";
 import { PostFormPage } from "./pages/PostFormPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { SearchPage } from "./pages/SearchPage";
 import { TimelinePage } from "./pages/TimelinePage";
 
 function App() {
@@ -44,6 +45,14 @@ function App() {
           element={
             <ProtectedRoute>
               <PostDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <SearchPage />
             </ProtectedRoute>
           }
         />

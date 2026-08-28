@@ -113,4 +113,31 @@ class UserServiceTest {
         assertThatThrownBy(() -> userService.listFollowing("missing", 100L))
                 .isInstanceOf(UserNotFoundException.class);
     }
+
+    @Test
+    void searchUsers_delegatesTrimmedKeywordToMapperWithLimit() {
+        List<UserSummaryResponse> expected = List.of(new UserSummaryResponse());
+        when(userMapper.search("ali", 100L, 20)).thenReturn(expected);
+
+        var result = userService.searchUsers("  ali  ", 100L);
+
+        assertThat(result).isSameAs(expected);
+        verify(userMapper).search("ali", 100L, 20);
+    }
+
+    @Test
+    void searchUsers_whenKeywordBlank_returnsEmptyListWithoutQueryingMapper() {
+        var result = userService.searchUsers("   ", 100L);
+
+        assertThat(result).isEmpty();
+        verify(userMapper, org.mockito.Mockito.never()).search(any(), any(), org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    void searchUsers_whenKeywordNull_returnsEmptyListWithoutQueryingMapper() {
+        var result = userService.searchUsers(null, 100L);
+
+        assertThat(result).isEmpty();
+        verify(userMapper, org.mockito.Mockito.never()).search(any(), any(), org.mockito.ArgumentMatchers.anyInt());
+    }
 }
