@@ -74,5 +74,8 @@ curl -X POST localhost:8080/api/auth/logout \
 mvn test
 ```
 
-- `AuthServiceTest`: 登録・ログイン・リフレッシュ・ログアウトのビジネスロジックの単体テスト（Mockito）
-- `AuthControllerIT`: Testcontainers上のPostgreSQLを使った結合テスト（登録→ログイン→認証必須エンドポイントへのアクセス、リフレッシュのローテーション、ログアウト後のリフレッシュ失敗まで）。Dockerが起動している必要がある
+Dockerは不要。テスト用DB(H2インメモリ、PostgreSQL互換モード)を`src/test/resources/application.yml`で構成しており、`db/migration`の本番マイグレーションをそのまま流して実データのやり取りを検証する。開発中のPostgreSQL(docker-compose)には一切書き込まない。
+
+- `*ServiceTest`(例: `AuthServiceTest`, `PostServiceTest`): 各サービスのビジネスロジックの単体テスト（Mockitoでマッパーをモック）
+- `mapper/*MapperTest`(例: `UserMapperTest`, `FollowMapperTest`): `@MybatisTest`でMyBatisのSQL(XML)自体をH2に対して実行し、N+1回避のJOINクエリや`ON CONFLICT DO NOTHING`の冪等性などが正しく動くかを検証する。各テストメソッドは自動ロールバックされる
+- `controller/*ControllerTest`(例: `AuthControllerTest`, `PostControllerTest`): MockMvc + 実際のService/Mapper層を通した結合テスト(H2使用、`@Transactional`でテストごとにロールバック)。リクエスト〜DB書き込み〜レスポンスまでの一連の流れを検証する

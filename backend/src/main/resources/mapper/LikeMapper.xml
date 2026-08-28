@@ -8,10 +8,16 @@
         )
     </select>
 
+    <!--
+        競合対象の列を明示しない ON CONFLICT DO NOTHING にしているのは、PostgreSQLだけでなく
+        H2(テスト用DB、PostgreSQL互換モード)でも同一SQLをそのまま実行できるようにするため
+        (H2は競合列を明示した ON CONFLICT (col, ...) DO NOTHING を受け付けない)。
+        likes テーブルには(post_id, user_id)のUNIQUE制約しか無いため、挙動は変わらない。
+    -->
     <insert id="insertIfAbsent">
         INSERT INTO likes (post_id, user_id, created_at)
         VALUES (#{postId}, #{userId}, now())
-        ON CONFLICT (post_id, user_id) DO NOTHING
+        ON CONFLICT DO NOTHING
     </insert>
 
     <delete id="deleteByPostIdAndUserId">

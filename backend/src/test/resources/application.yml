@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:snsapp_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.snsapp.backend.domain
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  jwt:
+    secret: test-only-secret-key-please-change-in-production-min-32-bytes
+    access-expiration-minutes: 15
+    refresh-expiration-days: 14
+  cors:
+    allowed-origins: http://localhost:5173
+
+aws:
+  s3:
+    bucket-name: test-bucket
+    region: us-east-1
