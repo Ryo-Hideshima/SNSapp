@@ -15,7 +15,8 @@ public interface PostMapper {
     List<PostResponse> findAll(
             @Param("limit") int limit,
             @Param("offset") int offset,
-            @Param("currentUserId") Long currentUserId
+            @Param("currentUserId") Long currentUserId,
+            @Param("authorUsername") String authorUsername
     );
 
     /** idがsinceIdより大きい(=新しい)投稿を新着順に最大limit件返す。X/TwitterのsinceIdと同じ考え方。 */

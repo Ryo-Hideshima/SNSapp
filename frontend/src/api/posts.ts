@@ -33,11 +33,14 @@ async function authRequestJson<TResponse>(path: string, init: RequestInit = {}):
   return parseJsonResponse<TResponse>(response);
 }
 
-/** 通常のページング一覧。 */
-export function listPosts(params: { page?: number; size?: number } = {}): Promise<PostListResponse> {
+/** 通常のページング一覧。authorUsernameを指定すると、そのユーザーの投稿だけに絞り込める。 */
+export function listPosts(
+  params: { page?: number; size?: number; authorUsername?: string } = {}
+): Promise<PostListResponse> {
   const query = new URLSearchParams();
   if (params.page !== undefined) query.set("page", String(params.page));
   if (params.size !== undefined) query.set("size", String(params.size));
+  if (params.authorUsername !== undefined) query.set("authorUsername", params.authorUsername);
   return authRequestJson<PostListResponse>(`/api/posts?${query.toString()}`);
 }
 

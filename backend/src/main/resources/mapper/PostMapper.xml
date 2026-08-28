@@ -35,6 +35,9 @@
 
     <select id="findAll" resultMap="postResponseResultMap">
         <include refid="selectPostWithAuthorAndCounts"/>
+        <if test="authorUsername != null">
+            WHERE u.username = #{authorUsername}
+        </if>
         ORDER BY p.created_at DESC, p.id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>

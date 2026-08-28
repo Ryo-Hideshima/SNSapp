@@ -32,8 +32,12 @@ export function PostCard({ post, onDelete, onToggleLike }: PostCardProps) {
   return (
     <article className="post-card">
       <div className="post-card__header">
-        <span className="post-card__author-name">{post.authorDisplayName}</span>
-        <span className="post-card__author-username">@{post.authorUsername}</span>
+        <Link to={`/users/${post.authorUsername}`} className="post-card__author-name">
+          {post.authorDisplayName}
+        </Link>
+        <Link to={`/users/${post.authorUsername}`} className="post-card__author-username">
+          @{post.authorUsername}
+        </Link>
         <span className="post-card__time">・{formatDateTime(post.createdAt)}</span>
       </div>
       <Link to={`/posts/${post.id}`} className="post-card__content-link">

@@ -193,6 +193,28 @@ class PostControllerIT {
     }
 
     @Test
+    void list_withAuthorUsername_returnsOnlyThatAuthorsPosts() throws Exception {
+        String aliceToken = registerAndGetAccessToken("filter_alice");
+        String bobToken = registerAndGetAccessToken("filter_bob");
+
+        mockMvc.perform(post("/api/posts")
+                        .header("Authorization", "Bearer " + aliceToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("content", "alice's post"))))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/posts")
+                        .header("Authorization", "Bearer " + bobToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("content", "bob's post"))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/posts?authorUsername=filter_alice").header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.posts.length()").value(1))
+                .andExpect(jsonPath("$.posts[0].authorUsername").value("filter_alice"));
+    }
+
+    @Test
     void endpoints_withoutToken_return401() throws Exception {
         mockMvc.perform(get("/api/posts")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/posts")

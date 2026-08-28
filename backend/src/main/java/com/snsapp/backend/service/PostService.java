@@ -22,8 +22,8 @@ public class PostService {
         this.postMapper = postMapper;
     }
 
-    public PostListResponse listPosts(int page, int size, Long currentUserId) {
-        List<PostResponse> posts = postMapper.findAll(size + 1, page * size, currentUserId);
+    public PostListResponse listPosts(int page, int size, Long currentUserId, String authorUsername) {
+        List<PostResponse> posts = postMapper.findAll(size + 1, page * size, currentUserId, authorUsername);
         return toPage(posts, page, size);
     }
 
