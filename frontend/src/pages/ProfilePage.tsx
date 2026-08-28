@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ApiError, getProfile, toggleFollow, updateProfile, type UserProfile } from "../api/users";
+import { ApiError, getProfile, toggleFollow, updateProfile, uploadAvatar, type UserProfile } from "../api/users";
 import { deletePost, listPosts, toggleLike, type Post } from "../api/posts";
 import { AppHeader } from "../components/AppHeader";
 import { Avatar } from "../components/Avatar";
@@ -20,6 +20,7 @@ export function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -57,12 +58,19 @@ export function ProfilePage() {
     };
   }, [username]);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setAvatarUrl(reader.result as string);
-    reader.readAsDataURL(file);
+    setProfileError("");
+    setUploadingAvatar(true);
+    try {
+      const result = await uploadAvatar(file);
+      setAvatarUrl(result.url);
+    } catch (err) {
+      setProfileError(err instanceof ApiError ? err.message : "画像のアップロードに失敗しました。");
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSaveProfile = async (e: FormEvent) => {
@@ -173,11 +181,12 @@ export function ProfilePage() {
                   </div>
                   <div className="form-field">
                     <label htmlFor="avatar">アイコン画像</label>
-                    <input id="avatar" type="file" accept="image/*" onChange={handleAvatarChange} />
+                    <input id="avatar" type="file" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
+                    {uploadingAvatar && <span className="form-hint">アップロード中...</span>}
                   </div>
                   <p className="form-error">{profileError}</p>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button type="submit" className="btn btn--inline" disabled={savingProfile}>
+                    <button type="submit" className="btn btn--inline" disabled={savingProfile || uploadingAvatar}>
                       {savingProfile ? "保存中..." : "保存する"}
                     </button>
                     <button type="button" className="btn btn--ghost btn--inline" onClick={() => setEditing(false)}>

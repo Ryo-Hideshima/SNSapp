@@ -65,3 +65,9 @@ export function listFollowers(username: string): Promise<UserSummary[]> {
 export function searchUsers(keyword: string): Promise<UserSummary[]> {
   return authRequestJson<UserSummary[]>(`/api/users?q=${encodeURIComponent(keyword)}`);
 }
+
+export function uploadAvatar(file: File): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  return authRequestJson<{ url: string }>("/api/uploads/avatar", { method: "POST", body: form });
+}
