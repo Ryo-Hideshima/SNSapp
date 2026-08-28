@@ -71,4 +71,29 @@
         WHERE id = #{id}
     </update>
 
+    <resultMap id="userSummaryResultMap" type="com.snsapp.backend.dto.UserSummaryResponse">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="displayName" column="display_name"/>
+        <result property="avatarUrl" column="avatar_url"/>
+        <result property="followedByCurrentUser" column="followed_by_current_user"/>
+    </resultMap>
+
+    <!--
+        username/display_nameの部分一致(大文字小文字無視)で検索。自分がフォロー済みかは
+        findFollowing/findFollowersと同じLEFT JOINパターンでこの1クエリに含める(N+1回避)。
+        自分自身は結果から除外する。
+    -->
+    <select id="search" resultMap="userSummaryResultMap">
+        SELECT
+            u.id, u.username, u.display_name, u.avatar_url,
+            (cf.follower_id IS NOT NULL) AS followed_by_current_user
+        FROM users u
+        LEFT JOIN follows cf ON cf.follower_id = #{currentUserId} AND cf.followee_id = u.id
+        WHERE u.id != #{currentUserId}
+          AND (u.username ILIKE CONCAT('%', #{keyword}, '%') OR u.display_name ILIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY u.username ASC
+        LIMIT #{limit}
+    </select>
+
 </mapper>
