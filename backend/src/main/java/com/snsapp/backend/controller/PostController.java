@@ -6,6 +6,7 @@ import com.snsapp.backend.dto.PostResponse;
 import com.snsapp.backend.dto.UpdatePostRequest;
 import com.snsapp.backend.security.UserPrincipal;
 import com.snsapp.backend.service.PostService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "投稿")
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {

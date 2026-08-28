@@ -5,6 +5,7 @@ import com.snsapp.backend.dto.UserProfileResponse;
 import com.snsapp.backend.dto.UserSummaryResponse;
 import com.snsapp.backend.security.UserPrincipal;
 import com.snsapp.backend.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "ユーザー")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
