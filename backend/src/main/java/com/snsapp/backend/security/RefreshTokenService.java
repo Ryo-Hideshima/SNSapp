@@ -51,14 +51,20 @@ public class RefreshTokenService {
      * リフレッシュトークンを検証し、有効なら失効させたうえで所有者のuserIdを返す(ローテーション)。
      * 無効・期限切れ・失効済みの場合は例外を投げる。
      *
-     * 検証と失効は1回のUPDATE(条件付き・RETURNING)で原子的に行う。SELECTしてから別途UPDATEする
-     * 2ステップだと、同じトークンでの同時リクエストが両方とも検証を通過してしまう競合状態が生じるため。
+     * 検証と失効は、有効性の条件をWHERE句に含めた1回のUPDATEで原子的に行う(revokeIfStillValid)。
+     * 同じトークンでの同時リクエストが両方とも検証を通過してしまう競合状態は、このUPDATE時点で
+     * 排他されるため発生しない。更新できた場合のみ、その後で行の中身をfindByTokenHashで取得する。
      */
     public Long validateAndRevoke(String rawToken) {
         String tokenHash = hash(rawToken);
         LocalDateTime now = LocalDateTime.now();
 
-        RefreshToken refreshToken = refreshTokenMapper.revokeIfUsable(tokenHash, now, now)
+        int updated = refreshTokenMapper.revokeIfStillValid(tokenHash, now, now);
+        if (updated != 1) {
+            throw new InvalidRefreshTokenException();
+        }
+
+        RefreshToken refreshToken = refreshTokenMapper.findByTokenHash(tokenHash)
                 .orElseThrow(InvalidRefreshTokenException::new);
 
         return refreshToken.getUserId();

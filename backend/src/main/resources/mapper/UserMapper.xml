@@ -91,7 +91,7 @@
         FROM users u
         LEFT JOIN follows cf ON cf.follower_id = #{currentUserId} AND cf.followee_id = u.id
         WHERE u.id != #{currentUserId}
-          AND (u.username ILIKE CONCAT('%', #{keyword}, '%') OR u.display_name ILIKE CONCAT('%', #{keyword}, '%'))
+          AND (LOWER(u.username) LIKE LOWER(CONCAT('%', #{keyword}, '%')) OR LOWER(u.display_name) LIKE LOWER(CONCAT('%', #{keyword}, '%')))
         ORDER BY u.username ASC
         LIMIT #{limit}
     </select>
