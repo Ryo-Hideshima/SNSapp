@@ -5,6 +5,16 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
+  // CIのランナーはローカルよりCPU/メモリが少なく、フル並列で走らせるとバックエンド
+  // (Spring Boot)への同時アクセスが集中し、タイムアウトが連鎖してしまう。
+  // ワーカー数を抑え、単発の詰まりはリトライで吸収する。
+  workers: process.env.CI ? 2 : undefined,
+  retries: process.env.CI ? 1 : 0,
+  // `mvn spring-boot:run`で起動するバックエンドはjar実行より応答が遅くなりがちなため、
+  // CIではデフォルトのassertタイムアウト(5秒)に余裕を持たせる。
+  expect: {
+    timeout: process.env.CI ? 10_000 : 5_000,
+  },
   reporter: [['html', { open: 'never' }], ['list']],
   globalTeardown: './global-teardown.ts',
   use: {
