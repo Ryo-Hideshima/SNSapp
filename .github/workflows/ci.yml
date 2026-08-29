@@ -122,6 +122,10 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Configure frontend env
+        working-directory: frontend
+        run: cp .env.example .env
+
       - name: Install e2e dependencies
         working-directory: e2e
         run: npm ci

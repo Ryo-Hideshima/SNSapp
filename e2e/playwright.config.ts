@@ -5,11 +5,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  // CIのランナーはローカルよりCPU/メモリが少ない。並列実行するとバックエンドへの
-  // 同時アクセスが集中し、接続が詰まって"タイムラインの取得に失敗しました"のような
-  // 生のfetchエラー(ApiErrorではない)が本当に発生することを実測で確認したため、
-  // CIでは完全に直列実行する。単発の詰まりはリトライで吸収する。
-  workers: process.env.CI ? 1 : undefined,
+  // CIのランナーはローカルよりCPU/メモリが少ないため、ワーカー数を控えめにし、
+  // 単発の詰まりはリトライで吸収する。
+  workers: process.env.CI ? 2 : undefined,
   retries: process.env.CI ? 1 : 0,
   expect: {
     timeout: process.env.CI ? 8_000 : 5_000,
