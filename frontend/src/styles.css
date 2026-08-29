@@ -87,12 +87,12 @@ body {
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  background: #1d9bf0;
+  background: #1573b0;
   color: #fff;
 }
 
 .btn:hover {
-  background: #1a8cd8;
+  background: #125f92;
 }
 
 .btn:disabled {
@@ -115,12 +115,12 @@ body {
 
 .btn--outline {
   background: transparent;
-  color: #1d9bf0;
-  border: 1px solid #1d9bf0;
+  color: #1573b0;
+  border: 1px solid #1573b0;
 }
 
 .btn--outline:hover {
-  background: rgba(29, 155, 240, 0.1);
+  background: rgba(21, 115, 176, 0.1);
 }
 
 .btn--following {
@@ -212,7 +212,7 @@ body {
   width: max-content;
   border: none;
   border-radius: 999px;
-  background: #1d9bf0;
+  background: #1573b0;
   color: #fff;
   font-weight: 700;
   font-size: 0.9rem;
@@ -222,7 +222,7 @@ body {
 }
 
 .new-posts-banner:hover {
-  background: #1a8cd8;
+  background: #125f92;
 }
 
 .timeline-sentinel {
@@ -361,7 +361,7 @@ body {
   font-weight: 700;
   flex-shrink: 0;
   object-fit: cover;
-  background: #1d9bf0;
+  background: #1573b0;
 }
 
 .avatar--sm {
@@ -467,7 +467,7 @@ body {
 }
 
 .tabs a.is-active {
-  background: #1d9bf0;
-  border-color: #1d9bf0;
+  background: #1573b0;
+  border-color: #1573b0;
   color: #fff;
 }
