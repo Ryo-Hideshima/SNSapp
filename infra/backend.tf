@@ -43,7 +43,7 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "JWT_SECRET", value = var.jwt_secret },
         { name = "CORS_ALLOWED_ORIGINS", value = "https://${aws_cloudfront_distribution.frontend.domain_name}" },
         { name = "AWS_S3_BUCKET_NAME", value = var.avatar_bucket_name },
-        { name = "AWS_S3_REGION", value = var.aws_region },
+        { name = "AWS_S3_REGION", value = var.avatar_bucket_region },
       ]
       logConfiguration = {
         logDriver = "awslogs"

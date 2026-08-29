@@ -92,6 +92,12 @@ variable "avatar_bucket_name" {
   default     = "snsapp-images"
 }
 
+variable "avatar_bucket_region" {
+  description = "アバター画像用S3バケットの実際のリージョン(aws_regionとは独立。既存バケットが別リージョンにある場合はそちらに合わせる)"
+  type        = string
+  default     = "us-east-1"
+}
+
 variable "log_retention_days" {
   description = "CloudWatch Logsの保持日数"
   type        = number
