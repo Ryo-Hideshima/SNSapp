@@ -1,5 +1,7 @@
 package com.snsapp.backend.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +14,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicateResource(DuplicateResourceException e) {
@@ -60,6 +64,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ImageUploadFailedException.class)
     public ResponseEntity<Map<String, Object>> handleImageUploadFailed(ImageUploadFailedException e) {
+        log.error("画像アップロードに失敗しました", e);
         return buildResponse(HttpStatus.BAD_GATEWAY, e.getMessage());
     }
 

@@ -1,6 +1,6 @@
 resource "aws_security_group" "alb" {
   name        = "${var.project_name}-alb"
-  description = "ALB: インターネットからのHTTPのみ許可(カスタムドメイン無しのためHTTPS/ACMは今回未対応)"
+  description = "ALB: allow HTTP from internet only (no custom domain/ACM in this setup)"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -25,7 +25,7 @@ resource "aws_security_group" "alb" {
 
 resource "aws_security_group" "fargate" {
   name        = "${var.project_name}-fargate"
-  description = "ECS Fargateタスク: ALBからのみ8080を許可"
+  description = "ECS Fargate task: allow port 8080 from ALB only"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -50,7 +50,7 @@ resource "aws_security_group" "fargate" {
 
 resource "aws_security_group" "rds" {
   name        = "${var.project_name}-rds"
-  description = "RDS: Fargateタスクからのみ5432を許可"
+  description = "RDS: allow port 5432 from Fargate task only"
   vpc_id      = aws_vpc.main.id
 
   ingress {
