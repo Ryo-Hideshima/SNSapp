@@ -1,0 +1,7 @@
+# このファイルをterraform.tfvarsにコピーして値を埋める(terraform.tfvarsはgitignore対象)
+# もしくは環境変数 TF_VAR_db_password / TF_VAR_jwt_secret で渡してもよい
+
+db_password = "change-me-to-a-strong-password"
+
+# 32バイト以上のランダム文字列を推奨。例: openssl rand -base64 32
+jwt_secret = "change-me-to-a-random-secret-at-least-32-bytes-long"
