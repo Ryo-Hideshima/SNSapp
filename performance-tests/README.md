@@ -30,7 +30,9 @@ performance-tests/
     lib/auth.js           - register/loginの共通ヘルパー
     seed.js                - ユーザー+投稿の一括投入(ステップ1)
     seed-relations.js      - フォロー+いいねの一括投入(ステップ2、seed.js完了後に実行)
-    cleanup.sql             - perftest_プレフィックスのデータを安全に削除
+    cleanup.sql             - perftest_プレフィックスの全データを安全に削除(手動実行、シード全体をリセットしたいとき用)
+    cleanup-pattern.sql     - 特定パターンのusernameだけを削除(run-with-cleanup.shが内部で使う)
+    run-with-cleanup.sh     - k6シナリオを実行し、終了後にそのシナリオが作ったユーザーだけを自動削除するラッパー
   scenarios/
     01-timeline-read.js     - タイムライン読み込み(ページング + sinceIdポーリング)
     02-post-write.js        - 投稿の作成/更新/削除
@@ -63,16 +65,21 @@ SEED_USER_COUNT=200 k6 run performance-tests/scripts/seed-relations.js
 
 各シナリオは`VUS`(仮想ユーザー数)・`DURATION`(実行時間)を環境変数で指定できる(既定はVUS=20, DURATION=1m)。
 
+`01-timeline-read` / `04-user-search` / `05-follow-profile` は、シード済みの既存ユーザーにログインするだけで新規ユーザーを作らないため、そのまま`k6 run`でよい:
 ```bash
 k6 run performance-tests/scenarios/01-timeline-read.js
-k6 run performance-tests/scenarios/02-post-write.js
-k6 run performance-tests/scenarios/03-likes-comments.js
 k6 run performance-tests/scenarios/04-user-search.js
 k6 run performance-tests/scenarios/05-follow-profile.js
-k6 run performance-tests/scenarios/06-auth-flow.js
 
 # 例: より高い負荷で3分間
 VUS=50 DURATION=3m k6 run performance-tests/scenarios/01-timeline-read.js
+```
+
+`02-post-write` / `03-likes-comments` / `06-auth-flow` は実行のたびに専用の`perftest_`ユーザーを新規作成するため、繰り返し実行するとデータが増え続ける。これらは`scripts/run-with-cleanup.sh`経由で実行すると、k6終了後にそのシナリオが作ったユーザーだけを自動削除する(k6のthresholds判定による終了コードはそのまま引き継がれる):
+```bash
+performance-tests/scripts/run-with-cleanup.sh performance-tests/scenarios/02-post-write.js 'perftest_w%'
+performance-tests/scripts/run-with-cleanup.sh performance-tests/scenarios/03-likes-comments.js 'perftest_hp_%' --env VUS=50 --env DURATION=2m
+performance-tests/scripts/run-with-cleanup.sh performance-tests/scenarios/06-auth-flow.js 'perftest_auth_%'
 ```
 
 結果をファイルに残したい場合(`results/`は.gitignore対象なので自由に出力してよい):
@@ -83,21 +90,23 @@ k6 run --out json=performance-tests/results/timeline-read.json performance-tests
 
 ### 3. ブラウザシナリオを実行する
 
-実際にChromiumを起動し、ログイン→タイムライン無限スクロール→投稿作成→いいね、を一連の操作として実行する。API直叩きでは見えないフロントエンドのレンダリング・体感速度(Core Web Vitals)まで含めて計測する。ブラウザ起動はプロセスコストが高いため、VU数(同時ブラウザ数)はAPIシナリオよりずっと少なめにすること。
+実際にChromiumを起動し、ログイン→タイムライン無限スクロール→投稿作成→いいね、を一連の操作として実行する。API直叩きでは見えないフロントエンドのレンダリング・体感速度(Core Web Vitals)まで含めて計測する。ブラウザ起動はプロセスコストが高いため、VU数(同時ブラウザ数)はAPIシナリオよりずっと少なめにすること。このシナリオも実行のたびにUIログイン用ユーザーを新規作成するため、`run-with-cleanup.sh`経由での実行を推奨する。
 
 ```bash
-k6 run performance-tests/scenarios/browser/01-user-journey.js
+performance-tests/scripts/run-with-cleanup.sh performance-tests/scenarios/browser/01-user-journey.js 'perftest_ui_%'
 
 # 動作を目で確認したい場合(ヘッドレスを無効化してブラウザを表示)
-K6_BROWSER_HEADLESS=false k6 run performance-tests/scenarios/browser/01-user-journey.js
+K6_BROWSER_HEADLESS=false performance-tests/scripts/run-with-cleanup.sh performance-tests/scenarios/browser/01-user-journey.js 'perftest_ui_%'
 ```
 
 ### 4. テストデータをクリーンアップする
 
+`02` / `03` / `06` / ブラウザシナリオは`run-with-cleanup.sh`経由で実行していれば、その回で作られたデータは実行のたびに自動で削除される。それとは別に、`seed.js` / `seed-relations.js`で投入した共有シードデータ（`01` / `04` / `05`が使い回すもの）は自動では消えないため、パフォーマンステストを一通り終えたタイミングで手動で削除する:
+
 ```bash
 docker compose exec -T postgres psql -U snsapp -d snsapp < performance-tests/scripts/cleanup.sql
 ```
-`perftest_`プレフィックスの付いたユーザーとその投稿・いいね・コメント・フォロー・リフレッシュトークンだけを、外部キー制約を踏まえた子→親の順で削除する。何度実行しても安全（既に無ければ0件になるだけ）。
+`perftest_`プレフィックスの付いたユーザーとその投稿・いいね・コメント・フォロー・リフレッシュトークンを全て、外部キー制約を踏まえた子→親の順で削除する。何度実行しても安全（既に無ければ0件になるだけ）。
 
 **もっと簡単に完全にクリーンな状態へ戻したい場合**は、DBボリューム自体を作り直す方法もある(ただしこれは開発中の他のデータも全て消える点に注意):
 ```bash

@@ -29,7 +29,9 @@ export function setup() {
   assertLocalTarget();
 
   // 「人気投稿」の作者を1人作り、投稿を1件作成する
-  const username = `perftest_hotpost_author_${Date.now()}`;
+  // (このシナリオが作るユーザーは全員 perftest_hp_ プレフィックスに揃え、
+  //  scripts/run-with-cleanup.sh で一括削除できるようにしている)
+  const username = `perftest_hp_author_${Date.now()}`;
   const registerRes = http.post(
     `${BASE_URL}/api/auth/register`,
     JSON.stringify({
@@ -55,7 +57,7 @@ let cachedUser = null;
 
 function ensureUser() {
   if (cachedUser) return cachedUser;
-  const username = `perftest_engager_${__VU}_${Date.now()}`;
+  const username = `perftest_hp_engager_${__VU}_${Date.now()}`;
   const res = http.post(
     `${BASE_URL}/api/auth/register`,
     JSON.stringify({
