@@ -79,3 +79,11 @@ Dockerは不要。テスト用DB(H2インメモリ、PostgreSQL互換モード)�
 - `*ServiceTest`(例: `AuthServiceTest`, `PostServiceTest`): 各サービスのビジネスロジックの単体テスト（Mockitoでマッパーをモック）
 - `mapper/*MapperTest`(例: `UserMapperTest`, `FollowMapperTest`): `@MybatisTest`でMyBatisのSQL(XML)自体をH2に対して実行し、N+1回避のJOINクエリや`ON CONFLICT DO NOTHING`の冪等性などが正しく動くかを検証する。各テストメソッドは自動ロールバックされる
 - `controller/*ControllerTest`(例: `AuthControllerTest`, `PostControllerTest`): MockMvc + 実際のService/Mapper層を通した結合テスト(H2使用、`@Transactional`でテストごとにロールバック)。リクエスト〜DB書き込み〜レスポンスまでの一連の流れを検証する
+
+## 静的解析（Checkstyle）
+
+```
+mvn checkstyle:check
+```
+
+未使用import・タブ文字混入・空catchブロックなど、最小限のスタイルチェックを行う(`checkstyle.xml`)。Javadoc必須化のような大規模な手直しを要するルールは含めていない。CIの`backend`ジョブでもテスト実行前に必ず実行される。

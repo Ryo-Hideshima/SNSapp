@@ -5,6 +5,13 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
+  // CIのランナーはローカルよりCPU/メモリが少ないため、ワーカー数を控えめにし、
+  // 単発の詰まりはリトライで吸収する。
+  workers: process.env.CI ? 2 : undefined,
+  retries: process.env.CI ? 1 : 0,
+  expect: {
+    timeout: process.env.CI ? 8_000 : 5_000,
+  },
   reporter: [['html', { open: 'never' }], ['list']],
   globalTeardown: './global-teardown.ts',
   use: {
