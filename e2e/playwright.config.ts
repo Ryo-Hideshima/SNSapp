@@ -5,15 +5,14 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  // CIのランナーはローカルよりCPU/メモリが少なく、フル並列で走らせるとバックエンド
-  // (Spring Boot)への同時アクセスが集中し、タイムアウトが連鎖してしまう。
-  // ワーカー数を抑え、単発の詰まりはリトライで吸収する。
-  workers: process.env.CI ? 2 : undefined,
+  // CIのランナーはローカルよりCPU/メモリが少ない。並列実行するとバックエンドへの
+  // 同時アクセスが集中し、接続が詰まって"タイムラインの取得に失敗しました"のような
+  // 生のfetchエラー(ApiErrorではない)が本当に発生することを実測で確認したため、
+  // CIでは完全に直列実行する。単発の詰まりはリトライで吸収する。
+  workers: process.env.CI ? 1 : undefined,
   retries: process.env.CI ? 1 : 0,
-  // `mvn spring-boot:run`で起動するバックエンドはjar実行より応答が遅くなりがちなため、
-  // CIではデフォルトのassertタイムアウト(5秒)に余裕を持たせる。
   expect: {
-    timeout: process.env.CI ? 10_000 : 5_000,
+    timeout: process.env.CI ? 8_000 : 5_000,
   },
   reporter: [['html', { open: 'never' }], ['list']],
   globalTeardown: './global-teardown.ts',

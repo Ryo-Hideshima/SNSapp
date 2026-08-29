@@ -70,7 +70,7 @@ body {
 }
 
 .form-error {
-  color: #f4212e;
+  color: #c9202b;
   font-size: 0.85rem;
   min-height: 1.2em;
   margin-bottom: 8px;
@@ -194,7 +194,7 @@ body {
 }
 
 .timeline-status--error {
-  color: #f4212e;
+  color: #c9202b;
 }
 
 /*
@@ -331,7 +331,7 @@ body {
 }
 
 .post-card__action--danger {
-  color: #f4212e;
+  color: #c9202b;
 }
 
 /* post detail / comments */

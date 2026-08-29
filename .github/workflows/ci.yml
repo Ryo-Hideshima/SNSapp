@@ -97,9 +97,13 @@ jobs:
             frontend/package-lock.json
             e2e/package-lock.json
 
+      - name: Build backend jar
+        working-directory: backend
+        run: ./mvnw -B -q -DskipTests package
+
       - name: Start backend
         working-directory: backend
-        run: nohup ./mvnw -B -q spring-boot:run > backend.log 2>&1 &
+        run: nohup java -jar target/*.jar > backend.log 2>&1 &
 
       - name: Wait for backend to be ready
         run: |
